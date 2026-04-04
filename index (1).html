@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StockPulse — Market Intelligence</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f7;
+      --bg-card: #ffffff;
+      --border: rgba(0,0,0,0.08);
+      --border-mid: rgba(0,0,0,0.12);
+      --text: #1d1d1f;
+      --text-muted: #6e6e73;
+      --text-dim: #aeaeb2;
+      --accent: #0071e3;
+      --accent-hover: #0077ed;
+      --green: #34c759;
+      --green-bg: #f0faf3;
+      --green-border: rgba(52,199,89,0.2);
+      --green-text: #1a7a36;
+      --red: #ff3b30;
+      --red-bg: #fff5f5;
+      --red-border: rgba(255,59,48,0.2);
+      --red-text: #b02a22;
+      --orange: #ff9500;
+      --orange-bg: #fff8f0;
+      --font: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Nav */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 52px;
+    }
+    .nav-logo { font-size: 17px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+    .nav-logo span { color: var(--accent); }
+    .nav-tag { font-size: 12px; color: var(--text-muted); }
+
+    /* Page */
+    .page { max-width: 720px; margin: 0 auto; padding: 4rem 1.5rem 5rem; }
+
+    /* API Banner */
+    .api-banner {
+      background: #fffbf0; border: 1px solid rgba(255,159,10,0.3);
+      border-radius: 16px; padding: 18px 20px; margin-bottom: 3rem;
+      animation: fadeUp 0.4s ease both;
+    }
+    .api-label { font-size: 13px; font-weight: 500; color: #9a6400; margin-bottom: 10px; }
+    .api-label a { color: var(--accent); text-decoration: none; }
+    .api-label a:hover { text-decoration: underline; }
+    .api-row { display: flex; gap: 8px; }
+    .api-input {
+      flex: 1; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px;
+      background: #fff; border: 1px solid rgba(255,159,10,0.3); border-radius: 8px;
+      color: var(--text); padding: 9px 12px; outline: none; transition: border-color 0.15s;
+    }
+    .api-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
+    .api-input::placeholder { color: var(--text-dim); }
+    .api-save {
+      font-size: 13px; font-weight: 500; background: var(--accent); color: #fff;
+      border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .api-save:hover { background: var(--accent-hover); }
+
+    /* Hero */
+    .hero { text-align: center; margin-bottom: 3rem; animation: fadeUp 0.5s ease 0.05s both; }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 500; color: var(--accent);
+      background: rgba(0,113,227,0.07); padding: 5px 12px;
+      border-radius: 20px; margin-bottom: 20px;
+    }
+    .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    h1 { font-size: clamp(36px, 6vw, 52px); font-weight: 600; letter-spacing: -1.5px; line-height: 1.07; color: var(--text); margin-bottom: 16px; }
+    .hero-sub { font-size: 17px; font-weight: 300; color: var(--text-muted); line-height: 1.65; max-width: 420px; margin: 0 auto; }
+
+    /* Search */
+    .search-wrap { animation: fadeUp 0.5s ease 0.1s both; margin-bottom: 3rem; }
+    .search-box {
+      display: flex; align-items: center; background: var(--bg-secondary);
+      border: 1px solid var(--border); border-radius: 22px;
+      padding: 6px 6px 6px 22px; margin-bottom: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-box:focus-within { border-color: var(--border-mid); box-shadow: 0 0 0 4px rgba(0,113,227,0.08); }
+    .ticker-input {
+      flex: 1; font-family: var(--font); font-size: 17px; font-weight: 500;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      background: transparent; border: none; outline: none; color: var(--text); padding: 7px 0;
+    }
+    .ticker-input::placeholder { color: var(--text-dim); font-weight: 300; text-transform: none; letter-spacing: 0; font-size: 16px; }
+    .analyze-btn {
+      font-family: var(--font); font-size: 15px; font-weight: 500;
+      background: var(--accent); color: #fff; border: none; border-radius: 16px;
+      padding: 12px 22px; cursor: pointer; transition: background 0.15s, transform 0.1s; white-space: nowrap; flex-shrink: 0;
+    }
+    .analyze-btn:hover { background: var(--accent-hover); }
+    .analyze-btn:active { transform: scale(0.97); }
+    .analyze-btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; }
+    .chips { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      font-size: 13px; font-weight: 400; padding: 6px 14px;
+      border: 1px solid var(--border); border-radius: 20px;
+      color: var(--text-muted); background: transparent; cursor: pointer; transition: all 0.15s;
+    }
+    .chip:hover { background: var(--bg-secondary); color: var(--text); border-color: var(--border-mid); }
+
+    .sep { height: 1px; background: var(--border); margin-bottom: 2rem; }
+
+    /* Loading */
+    .loading { display: none; flex-direction: column; align-items: center; gap: 14px; padding: 3rem 0; }
+    .loading.visible { display: flex; }
+    .spinner { width: 26px; height: 26px; border: 2px solid rgba(0,0,0,0.08); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.65s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: var(--text-muted); font-weight: 300; }
+
+    /* Error */
+    .error-box { display: none; font-size: 14px; color: var(--red); background: var(--red-bg); border: 1px solid var(--red-border); border-radius: 12px; padding: 14px 18px; }
+    .error-box.visible { display: block; }
+
+    /* Result */
+    .result { display: none; }
+    .result.visible { display: block; animation: fadeUp 0.4s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Result header */
+    .result-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
+    .result-ticker { font-size: 36px; font-weight: 600; letter-spacing: -0.5px; color: var(--text); line-height: 1; }
+    .result-name { font-size: 14px; color: var(--text-muted); font-weight: 300; margin-top: 5px; }
+    .signal-badge { font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 20px; margin-top: 6px; flex-shrink: 0; }
+    .signal-bullish { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }
+    .signal-bearish { background: var(--red-bg); color: var(--red-text); border: 1px solid var(--red-border); }
+    .signal-neutral  { background: var(--bg-secondary); color: var(--text-muted); border: 1px solid var(--border); }
+
+    /* Metrics */
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    .metric { background: var(--bg-secondary); border-radius: 12px; padding: 16px 18px; }
+    .metric-label { font-size: 12px; color: var(--text-muted); font-weight: 400; margin-bottom: 5px; }
+    .metric-value { font-size: 16px; font-weight: 500; color: var(--text); }
+
+    /* Section cards */
+    .sections { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+    .card { background: var(--bg-secondary); border-radius: 16px; padding: 20px 22px; }
+    .card-title { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
+    .card-prose { font-size: 15px; font-weight: 300; line-height: 1.7; color: var(--text); }
+
+    /* Analyst Rating Bar */
+    .rating-scale {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .rating-row { display: flex; align-items: center; gap: 10px; }
+    .rating-label { font-size: 13px; font-weight: 400; color: var(--text); width: 120px; flex-shrink: 0; }
+    .rating-bar-wrap { flex: 1; background: rgba(0,0,0,0.06); border-radius: 4px; height: 6px; overflow: hidden; }
+    .rating-bar { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); width: 0%; }
+    .rating-count { font-size: 13px; font-weight: 500; color: var(--text-muted); width: 28px; text-align: right; flex-shrink: 0; }
+    .bar-strong-buy { background: #34c759; }
+    .bar-buy       { background: #30d158; opacity: 0.75; }
+    .bar-hold      { background: #ff9500; }
+    .bar-underperform { background: #ff6b35; }
+    .bar-sell      { background: #ff3b30; }
+
+    .rating-consensus {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--border);
+    }
+    .consensus-label { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+    .consensus-value { font-size: 14px; font-weight: 600; }
+    .consensus-strong-buy { color: #1a7a36; }
+    .consensus-buy        { color: #1a7a36; }
+    .consensus-hold       { color: #c27000; }
+    .consensus-underperform { color: #c04a1a; }
+    .consensus-sell       { color: var(--red-text); }
+
+    /* News */
+    .news-list { display: flex; flex-direction: column; gap: 1px; }
+    .news-item {
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .news-source-row { display: flex; align-items: center; gap: 8px; }
+    .news-source {
+      font-size: 11px; font-weight: 500; color: var(--accent);
+      background: rgba(0,113,227,0.07); padding: 2px 8px;
+      border-radius: 10px; white-space: nowrap;
+    }
+    .news-date { font-size: 11px; color: var(--text-dim); }
+    .news-headline {
+      font-size: 14px; font-weight: 400; color: var(--text); line-height: 1.5;
+      text-decoration: none; cursor: pointer;
+    }
+    .news-headline:hover { color: var(--accent); }
+    .news-summary { font-size: 13px; font-weight: 300; color: var(--text-muted); line-height: 1.55; }
+    .news-link { font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 500; align-self: flex-start; }
+    .news-link:hover { text-decoration: underline; }
+
+    /* Bullets */
+    .bullets { display: flex; flex-direction: column; gap: 10px; }
+    .bullet { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; font-weight: 300; line-height: 1.6; color: var(--text); }
+    .bullet-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 8px; flex-shrink: 0; }
+
+    .disclaimer { font-size: 12px; color: var(--text-dim); margin-top: 1.5rem; text-align: center; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
+    .footer-text { font-size: 12px; color: var(--text-dim); }
+
+    @media (max-width: 520px) {
+      nav { padding: 0 1.25rem; }
+      .page { padding: 2.5rem 1.25rem 4rem; }
+      h1 { letter-spacing: -1px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .result-ticker { font-size: 28px; }
+      .rating-label { width: 100px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-logo">Stock<span>Pulse</span></div>
+    <div class="nav-tag">Powered by Claude AI</div>
+  </nav>
+
+  <div class="page">
+
+    <div class="api-banner" id="apiBanner">
+      <div class="api-label">Enter your Anthropic API key to get started — get one free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+      <div class="api-row">
+        <input class="api-input" id="apiKeyInput" type="password" placeholder="sk-ant-..." />
+        <button class="api-save" onclick="saveKey()">Save</button>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-pill"><div class="live-dot"></div>AI Market Intelligence</div>
+      <h1>Know your stocks.<br>Instantly.</h1>
+      <p class="hero-sub">Real news, analyst ratings, and AI-powered briefings for any ticker.</p>
+    </div>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <input class="ticker-input" id="tickerInput" placeholder="Search a ticker, e.g. AAPL" maxlength="10" />
+        <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">Analyze</button>
+      </div>
+      <div class="chips">
+        <span class="chip" onclick="quickTicker('AAPL')">AAPL</span>
+        <span class="chip" onclick="quickTicker('NVDA')">NVDA</span>
+        <span class="chip" onclick="quickTicker('MSFT')">MSFT</span>
+        <span class="chip" onclick="quickTicker('TSLA')">TSLA</span>
+        <span class="chip" onclick="quickTicker('AMZN')">AMZN</span>
+        <span class="chip" onclick="quickTicker('META')">META</span>
+        <span class="chip" onclick="quickTicker('GOOGL')">GOOGL</span>
+        <span class="chip" onclick="quickTicker('JPM')">JPM</span>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <span class="loading-text" id="loadingText">Scanning market signals…</span>
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="result" id="result">
+
+      <div class="result-header">
+        <div>
+          <div class="result-ticker" id="resTicker"></div>
+          <div class="result-name" id="resName"></div>
+        </div>
+        <span class="signal-badge" id="resSignal"></span>
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Sentiment</div><div class="metric-value" id="metSentiment">—</div></div>
+        <div class="metric"><div class="metric-label">Momentum</div><div class="metric-value" id="metMomentum">—</div></div>
+        <div class="metric"><div class="metric-label">Risk Level</div><div class="metric-value" id="metRisk">—</div></div>
+      </div>
+
+      <div class="sections">
+
+        <!-- Summary -->
+        <div class="card">
+          <div class="card-title">AI Summary</div>
+          <div class="card-prose" id="resSummary"></div>
+        </div>
+
+        <!-- Analyst Ratings -->
+        <div class="card">
+          <div class="card-title">Analyst Ratings</div>
+          <div class="rating-scale">
+            <div class="rating-row">
+              <div class="rating-label">Strong Buy</div>
+              <div class="rating-bar-wrap"><div class="rating-bar bar-strong-buy" id="barStrongBuy"></div></div>
+              <div class="rating-count" id="cntStrongBuy">0</div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-label">Buy</div>
+              <div class="rating-bar-wrap"><div class="rating-bar bar-buy" id="barBuy"></div></div>
+              <div class="rating-count" id="cntBuy">0</div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-label">Hold</div>
+              <div class="rating-bar-wrap"><div class="rating-bar bar-hold" id="barHold"></div></div>
+              <div class="rating-count" id="cntHold">0</div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-label">Underperform</div>
+              <div class="rating-bar-wrap"><div class="rating-bar bar-underperform" id="barUnderperform"></div></div>
+              <div class="rating-count" id="cntUnderperform">0</div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-label">Sell</div>
+              <div class="rating-bar-wrap"><div class="rating-bar bar-sell" id="barSell"></div></div>
+              <div class="rating-count" id="cntSell">0</div>
+            </div>
+          </div>
+          <div class="rating-consensus">
+            <span class="consensus-label">Consensus:</span>
+            <span class="consensus-value" id="consensusLabel">—</span>
+            <span style="font-size:12px;color:var(--text-dim);margin-left:auto" id="totalAnalysts"></span>
+          </div>
+        </div>
+
+        <!-- Key Catalysts -->
+        <div class="card">
+          <div class="card-title">Key Catalysts</div>
+          <div class="bullets" id="resCatalysts"></div>
+        </div>
+
+        <!-- Risk Factors -->
+        <div class="card">
+          <div class="card-title">Risk Factors</div>
+          <div class="bullets" id="resRisks"></div>
+        </div>
+
+        <!-- News -->
+        <div class="card">
+          <div class="card-title">Latest News</div>
+          <div class="news-list" id="newsList"></div>
+        </div>
+
+        <!-- Analyst Take -->
+        <div class="card">
+          <div class="card-title">Analyst Take</div>
+          <div class="card-prose" id="resAnalyst"></div>
+        </div>
+
+      </div>
+
+      <p class="disclaimer">Not financial advice. For informational purposes only. Always do your own research.</p>
+    </div>
+
+    <footer>
+      <span class="footer-text">© 2026 StockPulse</span>
+      <span class="footer-text">Not financial advice</span>
+    </footer>
+  </div>
+
+  <script>
+    let API_KEY = localStorage.getItem('sp_api_key') || '';
+    if (API_KEY) document.getElementById('apiBanner').style.display = 'none';
+
+    function saveKey() {
+      const val = document.getElementById('apiKeyInput').value.trim();
+      if (!val.startsWith('sk-')) { alert('Please enter a valid Anthropic API key (starts with sk-).'); return; }
+      API_KEY = val;
+      localStorage.setItem('sp_api_key', val);
+      document.getElementById('apiBanner').style.display = 'none';
+    }
+
+    document.getElementById('tickerInput').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
+    function quickTicker(t) { document.getElementById('tickerInput').value = t; analyze(); }
+
+    const msgs = ['Scanning market signals…','Fetching latest news…','Pulling analyst ratings…','Distilling intelligence…','Almost ready…'];
+    let loadTimer;
+    function startLoading() {
+      let i = 0;
+      document.getElementById('loadingText').textContent = msgs[0];
+      loadTimer = setInterval(() => { i=(i+1)%msgs.length; document.getElementById('loadingText').textContent = msgs[i]; }, 2000);
+    }
+    function stopLoading() { clearInterval(loadTimer); }
+
+    function setBullets(id, items) {
+      document.getElementById(id).innerHTML = (items||[]).map(t =>
+        `<div class="bullet"><div class="bullet-dot"></div><span>${t}</span></div>`
+      ).join('');
+    }
+
+    function renderRatings(r) {
+      const strongBuy = r.strongBuy || 0;
+      const buy = r.buy || 0;
+      const hold = r.hold || 0;
+      const underperform = r.underperform || 0;
+      const sell = r.sell || 0;
+      const total = strongBuy + buy + hold + underperform + sell || 1;
+
+      function setBar(barId, cntId, val) {
+        document.getElementById(cntId).textContent = val;
+        setTimeout(() => {
+          document.getElementById(barId).style.width = Math.round((val/total)*100) + '%';
+        }, 100);
+      }
+      setBar('barStrongBuy','cntStrongBuy', strongBuy);
+      setBar('barBuy','cntBuy', buy);
+      setBar('barHold','cntHold', hold);
+      setBar('barUnderperform','cntUnderperform', underperform);
+      setBar('barSell','cntSell', sell);
+
+      document.getElementById('totalAnalysts').textContent = (total) + ' analysts';
+
+      const consensus = r.consensus || '';
+      const el = document.getElementById('consensusLabel');
+      el.textContent = consensus;
+      const cls = consensus.toLowerCase().replace(' ','');
+      el.className = 'consensus-value consensus-' + (
+        cls === 'strongbuy' ? 'strong-buy' :
+        cls === 'buy' ? 'buy' :
+        cls === 'hold' ? 'hold' :
+        cls === 'underperform' ? 'underperform' : 'sell'
+      );
+    }
+
+    function renderNews(items) {
+      const list = document.getElementById('newsList');
+      if (!items || !items.length) { list.innerHTML = '<div style="font-size:14px;color:var(--text-muted)">No recent news found.</div>'; return; }
+      list.innerHTML = items.map(n => `
+        <div class="news-item">
+          <div class="news-source-row">
+            <span class="news-source">${n.source || 'Unknown'}</span>
+            <span class="news-date">${n.date || ''}</span>
+          </div>
+          <span class="news-headline">${n.headline}</span>
+          <div class="news-summary">${n.summary || ''}</div>
+          ${n.url ? `<a class="news-link" href="${n.url}" target="_blank">Read more →</a>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function analyze() {
+      if (!API_KEY) { document.getElementById('apiBanner').style.display = 'block'; document.getElementById('apiKeyInput').focus(); return; }
+      const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+      if (!ticker) return;
+
+      document.getElementById('result').classList.remove('visible');
+      document.getElementById('errorBox').classList.remove('visible');
+      document.getElementById('loading').classList.add('visible');
+      document.getElementById('analyzeBtn').disabled = true;
+      startLoading();
+
+      const prompt = `You are an equity research analyst with access to web search. Research the stock ticker: ${ticker}.
+
+Search for:
+1. Recent news articles about ${ticker} from the last 7 days (aim for 5-8 stories from different sources like Reuters, Bloomberg, WSJ, CNBC, MarketWatch, Barron's, Financial Times, etc.)
+2. Current analyst ratings/recommendations (Strong Buy, Buy, Hold, Underperform, Sell counts from major investment banks and analyst firms)
+3. Overall market sentiment, catalysts, and risks
+
+Return ONLY a valid JSON object — no markdown, no backticks, no preamble:
+{
+  "ticker": "${ticker}",
+  "companyName": "Full company name",
+  "signal": "Bullish" or "Bearish" or "Neutral",
+  "sentiment": "Positive" or "Negative" or "Mixed",
+  "momentum": "Strong" or "Moderate" or "Weak",
+  "risk": "High" or "Medium" or "Low",
+  "summary": "3-4 sentence AI overview of the company and current market position based on recent news.",
+  "ratings": {
+    "strongBuy": <integer count of analysts rating Strong Buy>,
+    "buy": <integer count of analysts rating Buy>,
+    "hold": <integer count of analysts rating Hold>,
+    "underperform": <integer count of analysts rating Underperform>,
+    "sell": <integer count of analysts rating Sell>,
+    "consensus": "Strong Buy" or "Buy" or "Hold" or "Underperform" or "Sell"
+  },
+  "catalysts": ["catalyst 1", "catalyst 2", "catalyst 3"],
+  "risks": ["risk 1", "risk 2", "risk 3"],
+  "news": [
+    {
+      "source": "Publication name e.g. Reuters",
+      "date": "Month Day e.g. Apr 3",
+      "headline": "Full article headline",
+      "summary": "1-2 sentence summary of what the article says and why it matters for investors.",
+      "url": "article url if available or empty string"
+    }
+  ],
+  "analystTake": "2-3 sentence synthesis of what professional analysts broadly say about this stock right now, referencing specific firms if known."
+}`;
+
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': API_KEY,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 4000,
+            tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+
+        const data = await res.json();
+        stopLoading();
+        document.getElementById('loading').classList.remove('visible');
+        document.getElementById('analyzeBtn').disabled = false;
+
+        if (data.error) throw new Error(data.error.message || 'API error');
+
+        const textBlock = data.content?.find(b => b.type === 'text');
+        if (!textBlock) throw new Error('No response from model.');
+
+        let raw = textBlock.text.trim().replace(/```json|```/g,'').trim();
+        // extract JSON if there's extra text
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error('Could not parse response.');
+        const json = JSON.parse(jsonMatch[0]);
+
+        document.getElementById('resTicker').textContent = json.ticker;
+        document.getElementById('resName').textContent = json.companyName || '';
+        document.getElementById('metSentiment').textContent = json.sentiment;
+        document.getElementById('metMomentum').textContent = json.momentum;
+        document.getElementById('metRisk').textContent = json.risk;
+        document.getElementById('resSummary').textContent = json.summary;
+        document.getElementById('resAnalyst').textContent = json.analystTake;
+
+        const sig = document.getElementById('resSignal');
+        sig.textContent = json.signal;
+        sig.className = 'signal-badge ' + (json.signal==='Bullish'?'signal-bullish':json.signal==='Bearish'?'signal-bearish':'signal-neutral');
+
+        if (json.ratings) renderRatings(json.ratings);
+        setBullets('resCatalysts', json.catalysts);
+        setBullets('resRisks', json.risks);
+        renderNews(json.news);
+
+        document.getElementById('result').classList.add('visible');
+
+      } catch (err) {
+        stopLoading();
+        document.getElementById('loading').classList.remove('visible');
+        document.getElementById('analyzeBtn').disabled = false;
+        const eb = document.getElementById('errorBox');
+        eb.textContent = 'Error: ' + (err.message || 'Something went wrong. Check your API key and try again.');
+        eb.classList.add('visible');
+      }
+    }
+  </script>
+</body>
+</html>
