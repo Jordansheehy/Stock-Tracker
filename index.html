@@ -889,7 +889,6 @@
     }
 
     async function analyze() {
-      if (!API_KEY) { document.getElementById('apiBanner').style.display = 'block'; document.getElementById('apiKeyInput').focus(); return; }
       const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
       if (!ticker) return;
 
