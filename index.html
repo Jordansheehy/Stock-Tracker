@@ -757,7 +757,6 @@
     async function searchCongress() {
       const name = document.getElementById('congressInput').value.trim();
       if (!name) return;
-
       document.getElementById('congressResult').classList.remove('visible');
       document.getElementById('congressError').classList.remove('visible');
       document.getElementById('congressLoading').classList.add('visible');
@@ -765,58 +764,37 @@
       startConLoading();
 
       try {
-        // Quiver Quantitative free API — no key needed
-        const res = await fetch(`https://api.quiverquant.com/beta/bulk/congresstrading`, {
-          headers: { 'Accept': 'application/json' }
-        });
+        const res = await fetch(`/api/congress?name=${encodeURIComponent(name)}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
 
-        if (!res.ok) throw new Error('Could not reach Quiver Quantitative API.');
-        const allTrades = await res.json();
+        const trades = data.trades || [];
+        if (!trades.length) throw new Error(`No trades found for "${name}". Try a last name like "Pelosi" or "Cruz".`);
 
-        // Filter by politician name (case-insensitive partial match)
-        const query = name.toLowerCase();
-        const filtered = allTrades.filter(t =>
-          t.Representative && t.Representative.toLowerCase().includes(query)
-        );
+        const polName = data.politician || trades[0]?.politician || trades[0]?.representative || name;
+        const chamber = data.chamber || trades[0]?.chamber || '';
+        const party   = data.party   || trades[0]?.party   || '';
+        const buys  = trades.filter(t => (t.transactionType||t.type||'').toLowerCase().includes('purchase') || (t.transactionType||'').toLowerCase().includes('buy')).length;
+        const sells = trades.length - buys;
 
-        if (!filtered.length) throw new Error(`No trades found for "${name}". Try a last name like "Pelosi" or "Cruz".`);
-
-        // Sort by most recent first
-        filtered.sort((a, b) => new Date(b.TransactionDate) - new Date(a.TransactionDate));
-
-        const recent = filtered.slice(0, 30);
-        const polName = filtered[0].Representative;
-        const chamber = filtered[0].Chamber || '';
-        const party = filtered[0].Party || '';
-
-        const buys = filtered.filter(t => t.Transaction && t.Transaction.toLowerCase().includes('purchase')).length;
-        const sells = filtered.filter(t => t.Transaction && t.Transaction.toLowerCase().includes('sale')).length;
-
-        // Avatar initials
         const parts = polName.trim().split(' ');
-        const initials = (parts[0][0] + (parts[parts.length-1][0] || '')).toUpperCase();
-        document.getElementById('polAvatar').textContent = initials;
+        document.getElementById('polAvatar').textContent = (parts[0][0] + (parts[parts.length-1][0] || '')).toUpperCase();
         document.getElementById('polName').textContent = polName;
-        document.getElementById('polMeta').textContent = [chamber, party].filter(Boolean).join(' · ') + ` · ${filtered.length} total disclosures`;
-        document.getElementById('polTotalTrades').textContent = filtered.length;
+        document.getElementById('polMeta').textContent = data.summary || ([chamber, party].filter(Boolean).join(' · ') + ` · ${trades.length} disclosures`);
+        document.getElementById('polTotalTrades').textContent = trades.length;
         document.getElementById('polBuys').textContent = buys;
         document.getElementById('polSells').textContent = sells;
 
-        // Render trades table
-        const tbody = document.getElementById('tradesBody');
-        tbody.innerHTML = recent.map(t => {
-          const isBuy = t.Transaction && t.Transaction.toLowerCase().includes('purchase');
-          const typeClass = isBuy ? 'trade-buy' : 'trade-sell';
-          const typeLabel = isBuy ? '↑ Buy' : '↓ Sell';
-          const date = t.TransactionDate ? new Date(t.TransactionDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—';
-          const amount = t.Amount || '—';
-          const ticker = t.Ticker || '—';
-          const company = t.Asset || t.Company || '';
+        document.getElementById('tradesBody').innerHTML = trades.slice(0, 30).map(t => {
+          const isBuy = (t.transactionType||t.type||'').toLowerCase().includes('purchase') || (t.transactionType||'').toLowerCase().includes('buy');
+          const date   = t.transactionDate ? new Date(t.transactionDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—';
+          const ticker  = t.ticker || '—';
+          const company = t.asset  || t.company || '';
           return `<tr>
             <td>${ticker !== '—' ? `<span class="trade-ticker-badge" onclick="goToStock('${ticker}')">${ticker}</span>` : '—'}</td>
             <td><div class="trade-company">${company.length > 28 ? company.slice(0,28)+'…' : company}</div></td>
-            <td class="${typeClass}">${typeLabel}</td>
-            <td class="trade-amount">${amount}</td>
+            <td class="${isBuy ? 'trade-buy' : 'trade-sell'}">${isBuy ? '↑ Buy' : '↓ Sell'}</td>
+            <td class="trade-amount">${t.amount || '—'}</td>
             <td class="trade-date">${date}</td>
           </tr>`;
         }).join('');
