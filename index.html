@@ -335,8 +335,38 @@
       .congress-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
   </style>
+  <style>
+    .gate-overlay { position:fixed;inset:0;z-index:999;background:#fff;display:flex;align-items:center;justify-content:center; }
+    .gate-box { width:100%;max-width:380px;padding:2rem 1.5rem;text-align:center; }
+    .gate-logo { font-size:22px;font-weight:600;color:var(--text);letter-spacing:-0.3px;margin-bottom:2rem; }
+    .gate-logo span { color:var(--accent); }
+    .gate-title { font-size:26px;font-weight:600;letter-spacing:-0.8px;color:var(--text);margin-bottom:8px; }
+    .gate-sub { font-size:14px;font-weight:300;color:var(--text-muted);margin-bottom:2rem;line-height:1.6; }
+    .gate-input { width:100%;font-family:'SF Mono','Fira Code',monospace;font-size:24px;font-weight:600;letter-spacing:0.25em;text-align:center;padding:16px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:14px;outline:none;color:var(--text);transition:border-color 0.2s,box-shadow 0.2s;margin-bottom:10px; }
+    .gate-input:focus { border-color:var(--border-mid);box-shadow:0 0 0 4px rgba(0,113,227,0.08); }
+    .gate-input.shake { animation:shake 0.4s ease; border-color:var(--red); }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+    .gate-btn { width:100%;font-family:var(--font);font-size:16px;font-weight:500;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;cursor:pointer;transition:background 0.15s,transform 0.1s;margin-bottom:12px; }
+    .gate-btn:hover { background:var(--accent-hover); }
+    .gate-btn:active { transform:scale(0.98); }
+    .gate-error { font-size:13px;color:var(--red);min-height:20px;margin-bottom:6px; }
+    .gate-note { font-size:12px;color:var(--text-dim);line-height:1.6; }
+  </style>
 </head>
 <body>
+
+  <!-- ── Access Code Gate ── -->
+  <div class="gate-overlay" id="gateOverlay">
+    <div class="gate-box">
+      <div class="gate-logo">Stock<span>Pulse</span></div>
+      <div class="gate-title">Enter access code</div>
+      <div class="gate-sub">Enter the 6-digit code you received after subscribing.</div>
+      <input class="gate-input" id="gateInput" type="text" inputmode="numeric" maxlength="6" placeholder="······" autocomplete="off" />
+      <div class="gate-error" id="gateError"></div>
+      <button class="gate-btn" onclick="submitCode()">Unlock →</button>
+      <div class="gate-note">Don't have a code? <a href="mailto:your@email.com">Contact us</a> to get access.</div>
+    </div>
+  </div>
 
   <nav>
     <div class="nav-logo">Stock<span>Pulse</span></div>
@@ -559,6 +589,36 @@
   </div>
 
   <script>
+    // ── Access Code Gate ──
+    const VALID_CODES = ['284719','537062','913847','462091','758326','194037','621458','873910','345672','089143','716284','432957','598031','267845','941326','073591','856214','129467','694823','381047'];
+
+    function checkGate() {
+      const saved = localStorage.getItem('sp_code');
+      if (saved && VALID_CODES.includes(saved)) {
+        document.getElementById('gateOverlay').style.display = 'none';
+      }
+    }
+
+    function submitCode() {
+      const val = document.getElementById('gateInput').value.trim();
+      if (VALID_CODES.includes(val)) {
+        localStorage.setItem('sp_code', val);
+        document.getElementById('gateOverlay').style.display = 'none';
+        document.getElementById('gateError').textContent = '';
+      } else {
+        document.getElementById('gateError').textContent = 'Invalid code. Please check and try again.';
+        const input = document.getElementById('gateInput');
+        input.classList.remove('shake');
+        void input.offsetWidth;
+        input.classList.add('shake');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkGate();
+      document.getElementById('gateInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); });
+    });
+
     // API key is handled server-side — hide the banner
     document.getElementById('apiBanner').style.display = 'none';
 
