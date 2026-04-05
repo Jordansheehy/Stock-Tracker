@@ -351,20 +351,48 @@
     .gate-btn:active { transform:scale(0.98); }
     .gate-error { font-size:13px;color:var(--red);min-height:20px;margin-bottom:6px; }
     .gate-note { font-size:12px;color:var(--text-dim);line-height:1.6; }
+    .gate-note a { color:var(--accent);cursor:pointer;text-decoration:none; }
+    .gate-field { width:100%;font-family:var(--font);font-size:15px;padding:13px 16px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;outline:none;color:var(--text);transition:border-color 0.2s,box-shadow 0.2s;margin-bottom:10px;display:block; }
+    .gate-field:focus { border-color:var(--border-mid);box-shadow:0 0 0 4px rgba(0,113,227,0.08); }
+    .gate-field::placeholder { color:var(--text-dim); }
   </style>
 </head>
 <body>
 
-  <!-- ── Access Code Gate ── -->
+  <!-- ── Access Gate ── -->
   <div class="gate-overlay" id="gateOverlay">
     <div class="gate-box">
       <div class="gate-logo">Stock<span>Pulse</span></div>
-      <div class="gate-title">Enter access code</div>
-      <div class="gate-sub">Enter the 6-digit code you received after subscribing.</div>
-      <input class="gate-input" id="gateInput" type="text" inputmode="numeric" maxlength="6" placeholder="······" autocomplete="off" />
-      <div class="gate-error" id="gateError"></div>
-      <button class="gate-btn" onclick="submitCode()">Unlock →</button>
-      <div class="gate-note">Don't have a code? <a href="mailto:your@email.com">Contact us</a> to get access.</div>
+
+      <!-- Step 1: Request Access -->
+      <div id="gateStep1">
+        <div class="gate-title">Get access</div>
+        <div class="gate-sub">Enter your details and we'll get back to you with next steps.</div>
+        <input class="gate-field" id="gateName" type="text" placeholder="Full name" autocomplete="name" />
+        <input class="gate-field" id="gateEmail" type="email" placeholder="Email address" autocomplete="email" />
+        <div class="gate-error" id="gateError"></div>
+        <button class="gate-btn" id="requestBtn" onclick="submitRequest()">Request access →</button>
+        <div class="gate-note">Already have a code? <a onclick="showCodeStep()">Enter it here</a></div>
+      </div>
+
+      <!-- Step 1b: Submitted confirmation -->
+      <div id="gateStep1b" style="display:none">
+        <div style="font-size:40px;margin-bottom:16px">📬</div>
+        <div class="gate-title">Request sent!</div>
+        <div class="gate-sub">We've received your request and will email you an access code shortly after payment is confirmed.</div>
+        <div class="gate-note" style="margin-top:1rem">Already paid and have your code? <a onclick="showCodeStep()">Enter it here</a></div>
+      </div>
+
+      <!-- Step 2: Enter Code -->
+      <div id="gateStep2" style="display:none">
+        <div class="gate-title">Enter your code</div>
+        <div class="gate-sub">Enter the 6-digit access code we sent you.</div>
+        <input class="gate-input" id="gateCode" type="text" inputmode="numeric" maxlength="6" placeholder="······" autocomplete="off" />
+        <div class="gate-error" id="codeError"></div>
+        <button class="gate-btn" onclick="submitCode()">Unlock →</button>
+        <div class="gate-note"><a onclick="showStep1()">← Back</a></div>
+      </div>
+
     </div>
   </div>
 
@@ -588,35 +616,115 @@
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
-    // ── Access Code Gate ──
+    // ── EmailJS config — paste your values here ──
+    const EMAILJS_PUBLIC_KEY  = 'j1vWvH2ixwJTn4E_d';
+    const EMAILJS_SERVICE_ID  = 'service_ntpi7me';
+    const EMAILJS_TEMPLATE_ID = 'template_gochr8t';
+
+    // ── Valid access codes ──
     const VALID_CODES = ['284719','537062','913847','462091','758326','194037','621458','873910','345672','089143','716284','432957','598031','267845','941326','073591','856214','129467','694823','381047'];
 
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+
+    // ── Check if already unlocked ──
     function checkGate() {
-      const saved = localStorage.getItem('sp_code');
-      if (saved && VALID_CODES.includes(saved)) {
-        document.getElementById('gateOverlay').style.display = 'none';
+      const saved = localStorage.getItem('sp_user');
+      if (saved) {
+        try {
+          const user = JSON.parse(saved);
+          if (user.email && VALID_CODES.includes(user.code)) {
+            unlockApp(user); return;
+          }
+        } catch(e) {}
       }
     }
 
-    function submitCode() {
-      const val = document.getElementById('gateInput').value.trim();
-      if (VALID_CODES.includes(val)) {
-        localStorage.setItem('sp_code', val);
-        document.getElementById('gateOverlay').style.display = 'none';
-        document.getElementById('gateError').textContent = '';
-      } else {
-        document.getElementById('gateError').textContent = 'Invalid code. Please check and try again.';
-        const input = document.getElementById('gateInput');
-        input.classList.remove('shake');
-        void input.offsetWidth;
-        input.classList.add('shake');
+    function unlockApp(user) {
+      document.getElementById('gateOverlay').style.display = 'none';
+      const navRight = document.querySelector('div[style*="gap:20px"]');
+      if (navRight && user.name) {
+        const span = document.createElement('span');
+        span.style.cssText = 'font-size:13px;color:var(--text-muted);';
+        span.textContent = user.name.split(' ')[0];
+        navRight.prepend(span);
       }
+    }
+
+    // ── Step navigation ──
+    function showStep1()    { document.getElementById('gateStep1').style.display='block'; document.getElementById('gateStep1b').style.display='none'; document.getElementById('gateStep2').style.display='none'; }
+    function showCodeStep() { document.getElementById('gateStep1').style.display='none'; document.getElementById('gateStep1b').style.display='none'; document.getElementById('gateStep2').style.display='block'; setTimeout(()=>document.getElementById('gateCode').focus(),100); }
+
+    // ── Request access ──
+    async function submitRequest() {
+      const name  = document.getElementById('gateName').value.trim();
+      const email = document.getElementById('gateEmail').value.trim();
+      const err   = document.getElementById('gateError');
+      const btn   = document.getElementById('requestBtn');
+
+      if (!name)  { err.textContent='Please enter your name.'; shake('gateName'); return; }
+      if (!email || !email.includes('@')) { err.textContent='Please enter a valid email.'; shake('gateEmail'); return; }
+
+      err.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      // Store name+email for later when they enter code
+      sessionStorage.setItem('sp_pending', JSON.stringify({ name, email }));
+
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          from_name:  name,
+          from_email: email,
+          reply_to:   email,
+          message:    `New StockPulse access request:\n\nName: ${name}\nEmail: ${email}\n\nSend them one of your 6-digit access codes after payment is confirmed.`
+        });
+        // Show confirmation
+        document.getElementById('gateStep1').style.display  = 'none';
+        document.getElementById('gateStep1b').style.display = 'block';
+      } catch(e) {
+        err.textContent = 'Could not send request. Please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Request access →';
+      }
+    }
+
+    // ── Submit code ──
+    function submitCode() {
+      const code = document.getElementById('gateCode').value.trim();
+      const err  = document.getElementById('codeError');
+
+      if (!code) { err.textContent = 'Please enter your access code.'; shake('gateCode'); return; }
+      if (!VALID_CODES.includes(code)) { err.textContent = 'Invalid code. Please check and try again.'; shake('gateCode'); return; }
+
+      // Get name/email from session or prompt
+      let user = { code };
+      const pending = sessionStorage.getItem('sp_pending');
+      if (pending) {
+        try { Object.assign(user, JSON.parse(pending)); } catch(e) {}
+      }
+      if (!user.name || !user.email) {
+        user.name  = prompt('Your name:') || 'Member';
+        user.email = prompt('Your email:') || '';
+      }
+
+      err.textContent = '';
+      localStorage.setItem('sp_user', JSON.stringify(user));
+      unlockApp(user);
+    }
+
+    function shake(id) {
+      const el = document.getElementById(id);
+      el.classList.remove('shake');
+      void el.offsetWidth;
+      el.classList.add('shake');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       checkGate();
-      document.getElementById('gateInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); });
+      document.getElementById('gateCode').addEventListener('keydown', e => { if (e.key==='Enter') submitCode(); });
+      document.getElementById('gateEmail').addEventListener('keydown', e => { if (e.key==='Enter') submitRequest(); });
     });
 
     // API key is handled server-side — hide the banner
