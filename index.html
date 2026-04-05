@@ -224,6 +224,107 @@
     footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
     .footer-text { font-size: 12px; color: var(--text-dim); }
 
+    /* ── Tab Navigation ── */
+    .tab-nav {
+      display: flex; gap: 4px;
+      background: var(--bg-secondary);
+      border-radius: 12px; padding: 4px;
+      margin-bottom: 2.5rem;
+      animation: fadeUp 0.4s ease both;
+    }
+    .tab-btn {
+      flex: 1; font-family: var(--font); font-size: 14px; font-weight: 500;
+      padding: 9px 16px; border: none; border-radius: 9px;
+      cursor: pointer; transition: all 0.2s; background: transparent;
+      color: var(--text-muted);
+    }
+    .tab-btn.active { background: #fff; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Congress Section ── */
+    .congress-search-row {
+      display: flex; gap: 8px; margin-bottom: 14px;
+    }
+    .congress-input {
+      flex: 1; font-family: var(--font); font-size: 15px; font-weight: 400;
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 22px; color: var(--text); padding: 12px 20px;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .congress-input:focus { border-color: var(--border-mid); box-shadow: 0 0 0 4px rgba(0,113,227,0.08); }
+    .congress-input::placeholder { color: var(--text-dim); }
+    .congress-btn {
+      font-family: var(--font); font-size: 15px; font-weight: 500;
+      background: var(--accent); color: #fff; border: none; border-radius: 16px;
+      padding: 12px 22px; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .congress-btn:hover { background: var(--accent-hover); }
+    .congress-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+    .pol-chips { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2rem; }
+
+    .congress-loading { display: none; flex-direction: column; align-items: center; gap: 14px; padding: 2.5rem 0; }
+    .congress-loading.visible { display: flex; }
+    .congress-error { display: none; font-size: 14px; color: var(--red); background: var(--red-bg); border: 1px solid var(--red-border); border-radius: 12px; padding: 14px 18px; margin-bottom: 1rem; }
+    .congress-error.visible { display: block; }
+
+    .congress-result { display: none; }
+    .congress-result.visible { display: block; animation: fadeUp 0.4s ease both; }
+
+    .politician-header {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 1.5rem;
+    }
+    .pol-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 600; color: var(--accent); flex-shrink: 0;
+    }
+    .pol-name { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; color: var(--text); }
+    .pol-meta { font-size: 13px; color: var(--text-muted); margin-top: 3px; font-weight: 300; }
+
+    .trades-table-wrap { overflow-x: auto; }
+    .trades-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .trades-table th {
+      font-size: 11px; font-weight: 500; color: var(--text-muted);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0 12px 10px 0; text-align: left; white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    .trades-table td {
+      padding: 12px 12px 12px 0; border-bottom: 1px solid var(--border);
+      vertical-align: middle; color: var(--text);
+    }
+    .trades-table tr:last-child td { border-bottom: none; }
+    .trade-ticker-badge {
+      display: inline-block; font-size: 12px; font-weight: 600;
+      background: rgba(0,113,227,0.08); color: var(--accent);
+      padding: 3px 8px; border-radius: 6px; letter-spacing: 0.04em;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .trade-ticker-badge:hover { background: rgba(0,113,227,0.15); }
+    .trade-buy { color: var(--green-text); font-weight: 500; }
+    .trade-sell { color: var(--red-text); font-weight: 500; }
+    .trade-date { color: var(--text-muted); white-space: nowrap; }
+    .trade-amount { color: var(--text-muted); white-space: nowrap; }
+    .trade-company { color: var(--text-muted); font-size: 12px; }
+
+    .congress-stats {
+      display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 10px; margin-bottom: 1.25rem;
+    }
+
+    .stock-act-note {
+      font-size: 12px; color: var(--text-dim); margin-top: 1.5rem;
+      padding: 12px 16px; background: var(--bg-secondary);
+      border-radius: 10px; line-height: 1.6;
+    }
+
     @media (max-width: 520px) {
       nav { padding: 0 1.25rem; }
       .page { padding: 2.5rem 1.25rem 4rem; }
@@ -231,6 +332,7 @@
       .metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .result-ticker { font-size: 28px; }
       .rating-label { width: 100px; font-size: 12px; }
+      .congress-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
   </style>
 </head>
@@ -238,7 +340,10 @@
 
   <nav>
     <div class="nav-logo">Stock<span>Pulse</span></div>
-    <div class="nav-tag">Powered by Claude AI</div>
+    <div style="display:flex;gap:20px;align-items:center">
+      <a href="#" onclick="switchTab('stocks');return false;" style="font-size:13px;text-decoration:none;font-weight:500;transition:color 0.15s" id="navStocks">Stocks</a>
+      <a href="#" onclick="switchTab('congress');return false;" style="font-size:13px;text-decoration:none;font-weight:500;transition:color 0.15s" id="navCongress">Congress Trades</a>
+    </div>
   </nav>
 
   <div class="page">
@@ -250,6 +355,9 @@
         <button class="api-save" onclick="saveKey()">Save</button>
       </div>
     </div>
+
+    <!-- ── Stocks Tab ── -->
+    <div class="tab-panel active" id="tabStocks">
 
     <div class="hero">
       <div class="hero-pill"><div class="live-dot"></div>AI Market Intelligence</div>
@@ -301,13 +409,11 @@
 
       <div class="sections">
 
-        <!-- Summary -->
         <div class="card">
           <div class="card-title">AI Summary</div>
           <div class="card-prose" id="resSummary"></div>
         </div>
 
-        <!-- Analyst Ratings -->
         <div class="card">
           <div class="card-title">Analyst Ratings</div>
           <div class="rating-scale">
@@ -344,25 +450,21 @@
           </div>
         </div>
 
-        <!-- Key Catalysts -->
         <div class="card">
           <div class="card-title">Key Catalysts</div>
           <div class="bullets" id="resCatalysts"></div>
         </div>
 
-        <!-- Risk Factors -->
         <div class="card">
           <div class="card-title">Risk Factors</div>
           <div class="bullets" id="resRisks"></div>
         </div>
 
-        <!-- News -->
         <div class="card">
           <div class="card-title">Latest News</div>
           <div class="news-list" id="newsList"></div>
         </div>
 
-        <!-- Analyst Take -->
         <div class="card">
           <div class="card-title">Analyst Take</div>
           <div class="card-prose" id="resAnalyst"></div>
@@ -372,6 +474,83 @@
 
       <p class="disclaimer">Not financial advice. For informational purposes only. Always do your own research.</p>
     </div>
+
+    </div><!-- end tabStocks -->
+
+    <!-- ── Congress Trades Tab ── -->
+    <div class="tab-panel" id="tabCongress">
+
+      <div class="hero">
+        <div class="hero-pill" style="background:rgba(88,86,214,0.08);color:#5856d6"><div class="live-dot" style="background:#5856d6"></div>STOCK Act Disclosures</div>
+        <h1>Follow the<br>smart money.</h1>
+        <p class="hero-sub">Real congressional trading disclosures. See what senators and representatives are buying and selling.</p>
+      </div>
+
+      <div class="search-wrap">
+        <div class="congress-search-row">
+          <input class="congress-input" id="congressInput" placeholder="Search politician, e.g. Pelosi" />
+          <button class="congress-btn" id="congressBtn" onclick="searchCongress()">Search</button>
+        </div>
+        <div class="pol-chips">
+          <span class="chip" onclick="quickPol('Pelosi')">Nancy Pelosi</span>
+          <span class="chip" onclick="quickPol('Cruz')">Ted Cruz</span>
+          <span class="chip" onclick="quickPol('Tuberville')">Tommy Tuberville</span>
+          <span class="chip" onclick="quickPol('Ocasio-Cortez')">AOC</span>
+          <span class="chip" onclick="quickPol('Schiff')">Adam Schiff</span>
+          <span class="chip" onclick="quickPol('Boozman')">John Boozman</span>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="congress-loading" id="congressLoading">
+        <div class="spinner"></div>
+        <span class="loading-text" id="congressLoadingText">Fetching disclosure data…</span>
+      </div>
+
+      <div class="congress-error" id="congressError"></div>
+
+      <div class="congress-result" id="congressResult">
+
+        <div class="politician-header">
+          <div class="pol-avatar" id="polAvatar">?</div>
+          <div>
+            <div class="pol-name" id="polName">—</div>
+            <div class="pol-meta" id="polMeta">—</div>
+          </div>
+        </div>
+
+        <div class="congress-stats">
+          <div class="metric"><div class="metric-label">Total Trades</div><div class="metric-value" id="polTotalTrades">—</div></div>
+          <div class="metric"><div class="metric-label">Buys</div><div class="metric-value" style="color:var(--green-text)" id="polBuys">—</div></div>
+          <div class="metric"><div class="metric-label">Sells</div><div class="metric-value" style="color:var(--red-text)" id="polSells">—</div></div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:16px 20px 0"><div class="card-title">Recent Trades</div></div>
+          <div class="trades-table-wrap" style="padding:0 20px 20px">
+            <table class="trades-table">
+              <thead>
+                <tr>
+                  <th>Ticker</th>
+                  <th>Company</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="tradesBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="stock-act-note">
+          Data sourced from <strong>Quiver Quantitative</strong> via public STOCK Act disclosures. Congress members are required to report trades within 45 days. Not financial advice.
+        </div>
+
+      </div>
+
+    </div><!-- end tabCongress -->
 
     <footer>
       <span class="footer-text">© 2026 StockPulse</span>
@@ -389,6 +568,118 @@
       API_KEY = val;
       localStorage.setItem('sp_api_key', val);
       document.getElementById('apiBanner').style.display = 'none';
+    }
+
+    // ── Tab switching ──
+    function switchTab(tab) {
+      document.getElementById('tabStocks').classList.toggle('active', tab === 'stocks');
+      document.getElementById('tabCongress').classList.toggle('active', tab === 'congress');
+      const activeColor = 'var(--text)';
+      const mutedColor = 'var(--text-muted)';
+      document.getElementById('navStocks').style.color = tab === 'stocks' ? activeColor : mutedColor;
+      document.getElementById('navCongress').style.color = tab === 'congress' ? activeColor : mutedColor;
+    }
+    switchTab('stocks');
+
+    // ── Congress trading ──
+    document.getElementById('congressInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchCongress(); });
+    function quickPol(name) { document.getElementById('congressInput').value = name; searchCongress(); }
+
+    const conMsgs = ['Fetching disclosure data…', 'Searching STOCK Act filings…', 'Pulling trade records…', 'Almost there…'];
+    let conTimer;
+    function startConLoading() {
+      let i = 0;
+      document.getElementById('congressLoadingText').textContent = conMsgs[0];
+      conTimer = setInterval(() => { i=(i+1)%conMsgs.length; document.getElementById('congressLoadingText').textContent = conMsgs[i]; }, 1800);
+    }
+    function stopConLoading() { clearInterval(conTimer); }
+
+    async function searchCongress() {
+      const name = document.getElementById('congressInput').value.trim();
+      if (!name) return;
+
+      document.getElementById('congressResult').classList.remove('visible');
+      document.getElementById('congressError').classList.remove('visible');
+      document.getElementById('congressLoading').classList.add('visible');
+      document.getElementById('congressBtn').disabled = true;
+      startConLoading();
+
+      try {
+        // Quiver Quantitative free API — no key needed
+        const res = await fetch(`https://api.quiverquant.com/beta/bulk/congresstrading`, {
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (!res.ok) throw new Error('Could not reach Quiver Quantitative API.');
+        const allTrades = await res.json();
+
+        // Filter by politician name (case-insensitive partial match)
+        const query = name.toLowerCase();
+        const filtered = allTrades.filter(t =>
+          t.Representative && t.Representative.toLowerCase().includes(query)
+        );
+
+        if (!filtered.length) throw new Error(`No trades found for "${name}". Try a last name like "Pelosi" or "Cruz".`);
+
+        // Sort by most recent first
+        filtered.sort((a, b) => new Date(b.TransactionDate) - new Date(a.TransactionDate));
+
+        const recent = filtered.slice(0, 30);
+        const polName = filtered[0].Representative;
+        const chamber = filtered[0].Chamber || '';
+        const party = filtered[0].Party || '';
+
+        const buys = filtered.filter(t => t.Transaction && t.Transaction.toLowerCase().includes('purchase')).length;
+        const sells = filtered.filter(t => t.Transaction && t.Transaction.toLowerCase().includes('sale')).length;
+
+        // Avatar initials
+        const parts = polName.trim().split(' ');
+        const initials = (parts[0][0] + (parts[parts.length-1][0] || '')).toUpperCase();
+        document.getElementById('polAvatar').textContent = initials;
+        document.getElementById('polName').textContent = polName;
+        document.getElementById('polMeta').textContent = [chamber, party].filter(Boolean).join(' · ') + ` · ${filtered.length} total disclosures`;
+        document.getElementById('polTotalTrades').textContent = filtered.length;
+        document.getElementById('polBuys').textContent = buys;
+        document.getElementById('polSells').textContent = sells;
+
+        // Render trades table
+        const tbody = document.getElementById('tradesBody');
+        tbody.innerHTML = recent.map(t => {
+          const isBuy = t.Transaction && t.Transaction.toLowerCase().includes('purchase');
+          const typeClass = isBuy ? 'trade-buy' : 'trade-sell';
+          const typeLabel = isBuy ? '↑ Buy' : '↓ Sell';
+          const date = t.TransactionDate ? new Date(t.TransactionDate).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—';
+          const amount = t.Amount || '—';
+          const ticker = t.Ticker || '—';
+          const company = t.Asset || t.Company || '';
+          return `<tr>
+            <td>${ticker !== '—' ? `<span class="trade-ticker-badge" onclick="goToStock('${ticker}')">${ticker}</span>` : '—'}</td>
+            <td><div class="trade-company">${company.length > 28 ? company.slice(0,28)+'…' : company}</div></td>
+            <td class="${typeClass}">${typeLabel}</td>
+            <td class="trade-amount">${amount}</td>
+            <td class="trade-date">${date}</td>
+          </tr>`;
+        }).join('');
+
+        stopConLoading();
+        document.getElementById('congressLoading').classList.remove('visible');
+        document.getElementById('congressBtn').disabled = false;
+        document.getElementById('congressResult').classList.add('visible');
+
+      } catch(err) {
+        stopConLoading();
+        document.getElementById('congressLoading').classList.remove('visible');
+        document.getElementById('congressBtn').disabled = false;
+        const eb = document.getElementById('congressError');
+        eb.textContent = 'Error: ' + (err.message || 'Something went wrong. Try again.');
+        eb.classList.add('visible');
+      }
+    }
+
+    function goToStock(ticker) {
+      switchTab('stocks');
+      document.getElementById('tickerInput').value = ticker;
+      analyze();
     }
 
     document.getElementById('tickerInput').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
