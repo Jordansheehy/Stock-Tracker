@@ -8,28 +8,14 @@ export default async function handler(req, res) {
   if (!name) return res.status(400).json({ error: 'Name required' });
 
   try {
-    // Try Capitol Trades API
-    const response = await fetch(
-      `https://api.capitoltrades.com/trades?politician=${encodeURIComponent(name)}&pageSize=30`,
-      { headers: { 'Accept': 'application/json', 'User-Agent': 'StockPulse/1.0' } }
-    );
+    const prompt = `Search for recent stock trades disclosed by US politician "${name}" under the STOCK Act congressional trading disclosure requirements. Search sites like capitoltrades.com, quiverquant.com, and official congressional disclosure databases.
 
-    if (response.ok) {
-      const data = await response.json();
-      const trades = data.data || data.trades || data || [];
-      if (trades.length > 0) {
-        return res.status(200).json({ trades, source: 'capitoltrades' });
-      }
-    }
-
-    // Fallback: use Claude AI with web search to find congressional trades
-    const prompt = `Search for recent stock trades disclosed by ${name} under the STOCK Act congressional trading disclosure requirements.
-
-Return ONLY valid JSON — no markdown, no backticks:
+Return ONLY valid JSON with no markdown or backticks:
 {
-  "politician": "Full name of the politician",
+  "politician": "Full official name",
   "chamber": "Senate or House",
   "party": "Democrat or Republican or Independent",
+  "summary": "2 sentence summary of their recent trading activity and any notable patterns.",
   "trades": [
     {
       "ticker": "AAPL",
@@ -38,11 +24,10 @@ Return ONLY valid JSON — no markdown, no backticks:
       "amount": "$15,001 - $50,000",
       "date": "2025-03-15"
     }
-  ],
-  "summary": "2 sentence summary of this politician's recent trading activity and any notable patterns."
+  ]
 }
 
-Find at least 5-10 recent trades if available. Use real disclosed data only.`;
+Find as many recent trades as possible (aim for 10-20). Only include real disclosed trades.`;
 
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -53,7 +38,7 @@ Find at least 5-10 recent trades if available. Use real disclosed data only.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        max_tokens: 3000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: prompt }]
       })
@@ -66,11 +51,10 @@ Find at least 5-10 recent trades if available. Use real disclosed data only.`;
     if (!textBlock) throw new Error('No response from AI');
 
     const jsonMatch = textBlock.text.trim().replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Could not parse AI response');
+    if (!jsonMatch) throw new Error('Could not parse response');
 
     const parsed = JSON.parse(jsonMatch[0]);
 
-    // Normalize trades format
     const trades = (parsed.trades || []).map(t => ({
       politician: parsed.politician || name,
       chamber: parsed.chamber || '',
@@ -87,8 +71,7 @@ Find at least 5-10 recent trades if available. Use real disclosed data only.`;
       politician: parsed.politician,
       chamber: parsed.chamber,
       party: parsed.party,
-      summary: parsed.summary,
-      source: 'ai'
+      summary: parsed.summary
     });
 
   } catch (err) {
