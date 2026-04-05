@@ -1,0 +1,11 @@
+{
+  "name": "stockpulse",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0",
+    "@clerk/clerk-sdk-node": "^4.13.0",
+    "stripe": "^14.0.0"
+  }
+}
